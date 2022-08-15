@@ -1,7 +1,10 @@
 package com.pauloeduardocosta.pontointeligente.api.entities;
 
 import com.pauloeduardocosta.pontointeligente.api.enums.EPerfil;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.CascadeType;
@@ -26,6 +29,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @Entity
 @Table(name = "funcionarios")
