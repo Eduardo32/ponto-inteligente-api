@@ -78,6 +78,7 @@ public class Funcionario implements Serializable {
     private Empresa empresa;
 
     @OneToMany(mappedBy = "funcionario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<Lancamento> lancamentos;
 
     @Transient

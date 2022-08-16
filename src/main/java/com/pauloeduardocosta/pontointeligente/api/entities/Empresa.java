@@ -49,6 +49,7 @@ public class Empresa implements Serializable {
     private Date dataAtualizacao;
 
     @OneToMany(mappedBy = "empresa", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<Funcionario> funcionarios;
 
     @PreUpdate

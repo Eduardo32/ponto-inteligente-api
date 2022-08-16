@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.NoSuchAlgorithmException;
 
 @RestController
-@RequestMapping("/api/empresa")
+@RequestMapping("/api/pessoa/juridica")
 @CrossOrigin(origins = "*")
-public class EmpresaRS {
+public class CadastroPJRS {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EmpresaRS.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CadastroPJRS.class);
 
     @Autowired
     private IFuncionarioService funcionarioService;
@@ -42,17 +42,8 @@ public class EmpresaRS {
         LOGGER.info("Cadastrando PJ {}", cadastroPJDTO.toString());
         Response<CadastroPJDTO> response = new Response<>();
         validarDadosExistentes(cadastroPJDTO, result);
-        Empresa empresa = Empresa.builder()
-                .cnpj(cadastroPJDTO.getCnpj())
-                .razaoSocial(cadastroPJDTO.getRazaoSocial())
-                .build();
-        Funcionario funcionario = Funcionario.builder()
-                .nome(cadastroPJDTO.getNome())
-                .email(cadastroPJDTO.getEmail())
-                .cpf(cadastroPJDTO.getCpf())
-                .perfil(EPerfil.ROLE_ADMIN)
-                .senha(PasswordUtils.gerarBCrypt(cadastroPJDTO.getSenha()))
-                .build();
+        Empresa empresa = converterDTOParaEmpresa(cadastroPJDTO);
+        Funcionario funcionario = converterDTOParaFuncionario(cadastroPJDTO);
 
         if(result.hasErrors()) {
             LOGGER.error("Erro validando dados de cadastro PJ: {}", result.getAllErrors());
@@ -64,25 +55,44 @@ public class EmpresaRS {
         funcionario.setEmpresa(empresa);
         funcionarioService.salvar(funcionario);
 
-        response.setData(
-                CadastroPJDTO.builder()
-                        .id(funcionario.getId())
-                        .nome(funcionario.getNome())
-                        .email(funcionario.getEmail())
-                        .cpf(funcionario.getCpf())
-                        .razaoSocial(funcionario.getEmpresa().getRazaoSocial())
-                        .cnpj(funcionario.getEmpresa().getCnpj())
-                        .build());
-
+        response.setData(converterFuncionarioParaDTO(funcionario));
         return ResponseEntity.ok(response);
+    }
+
+    private CadastroPJDTO converterFuncionarioParaDTO(Funcionario funcionario) {
+        return CadastroPJDTO.builder()
+                .id(funcionario.getId())
+                .nome(funcionario.getNome())
+                .email(funcionario.getEmail())
+                .cpf(funcionario.getCpf())
+                .razaoSocial(funcionario.getEmpresa().getRazaoSocial())
+                .cnpj(funcionario.getEmpresa().getCnpj())
+                .build();
+    }
+
+    private Funcionario converterDTOParaFuncionario(CadastroPJDTO cadastroPJDTO) {
+        return Funcionario.builder()
+                .nome(cadastroPJDTO.getNome())
+                .email(cadastroPJDTO.getEmail())
+                .cpf(cadastroPJDTO.getCpf())
+                .perfil(EPerfil.ROLE_ADMIN)
+                .senha(PasswordUtils.gerarBCrypt(cadastroPJDTO.getSenha()))
+                .build();
+    }
+
+    private Empresa converterDTOParaEmpresa(CadastroPJDTO cadastroPJDTO) {
+        return Empresa.builder()
+                .cnpj(cadastroPJDTO.getCnpj())
+                .razaoSocial(cadastroPJDTO.getRazaoSocial())
+                .build();
     }
 
     private void validarDadosExistentes(CadastroPJDTO cadastroPJDTO, BindingResult result) {
         empresaService.buscarPorCnpj(cadastroPJDTO.getCnpj())
                 .ifPresent(empresa -> result.addError(new ObjectError("empresa", "Empresa já existente")));
         funcionarioService.buscarPorCpf(cadastroPJDTO.getCpf())
-                .ifPresent(empresa -> result.addError(new ObjectError("funcionario", "CPF já existente")));
+                .ifPresent(funcionario -> result.addError(new ObjectError("funcionario", "CPF já existente")));
         funcionarioService.buscarPorEmail(cadastroPJDTO.getEmail())
-                .ifPresent(empresa -> result.addError(new ObjectError("funcionario", "Email já existente")));
+                .ifPresent(funcionario -> result.addError(new ObjectError("funcionario", "Email já existente")));
     }
 }
